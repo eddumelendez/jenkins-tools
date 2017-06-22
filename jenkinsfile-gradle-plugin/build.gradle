@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+def addDependency(configurationName, dependency) {
+    def coordinates = [
+            'group': dependency.groupId.text(),
+            'name': dependency.artifactId.text(),
+            'version': dependency.version.text()
+    ]
+    dependencies {
+        add configurationName, coordinates
+    }
+}
+
+def effectivePomFile = file('pom.xml')
+if (effectivePomFile.file) {
+    def pom = new XmlSlurper().parseText(file('pom.xml').text)
+    pom.dependencies.dependency.each { dependency ->
+        def scope = dependency.scope.text()
+        if (scope == 'compile') {
+            addDependency scope, dependency
+        }
+        else if (scope == 'test') {
+            addDependency 'testCompile', dependency
+        }
+    }
+}
+
+dependencies {
+    compile localGroovy()
+    compile gradleApi()
+    testCompile gradleTestKit()
+}
